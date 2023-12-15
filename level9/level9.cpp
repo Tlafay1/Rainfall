@@ -10,18 +10,18 @@ void *operator_new(uint param_1)
 
 void main(int argc,  char **argv)
 {
-  N *obj;
-  char *this_00;
+  N *obj1;
+  N *obj2;
   
   if (argc < 2) {
     _exit(1);
   }
-  obj = (N *)operator_new(108);
-  N::N(obj,5);
-  this_00 = (char *)operator_new(108);
-  N::N((N *)this_00,6);
-  N::setAnnotation(obj,(*argv)[4]);
-  (**(code **)*this_00)(this_00,obj);
+  obj1 = (N *)operator_new(108);
+  N::N(obj1,5);
+  obj2 = (N *)operator_new(108);
+  N::N((N *)obj2,6);
+  N::setAnnotation(obj1,(*argv)[4]);
+  (**(code **)*obj2)(obj2,obj1);
   return;
 }
 
