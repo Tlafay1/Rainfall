@@ -322,17 +322,24 @@ flag: `5684af5cb4c8679958be4abe6373147ab52d95768e047820bf382e44fa8d8fb9`
 # level8
 
 Il faut :
+
 `auth    `
+
 `service`
+
 `service`
+
 `login`
+
 
 car  if (auth[8] == 0) donc last char de auth != 0
 
 et faut pas que avant de faire login l'adresse de l'input + 32 -> (32 = 2 * 16) == output
 
 service + 0x10 = 16
+
 gdb> disass main
+
    0x08048625 <+193>:	cmp    eax,0x1e donc 31, donc il faut 2 service pour >= 32
 
 `c542e581c5ba5162a85f767996e3247ed619ef6c6f7b76a59435545dc6259f8a`
