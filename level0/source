@@ -1,0 +1,15 @@
+int main(int argc,char *argv[])
+{
+  int iVar1;
+  char *local_20;
+
+  iVar1 = atoi(argv[1]);
+  if (iVar1 == 423) {
+    local_20 = strdup("/bin/sh");
+    execv("/bin/sh",&local_20);
+  }
+  else {
+    fwrite("No !\n",1,5,(FILE *)stderr);
+  }
+  return 0;
+}
