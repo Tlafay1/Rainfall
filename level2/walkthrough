@@ -61,4 +61,11 @@ We can successfully overwrite `eip` here:
 
 Now that we did that, we need to make sure `eip` points to somewhere in our shellcode. Since no ASLR happens here, we could just determine the address where our shellcode starts.
 
+You can just start the python script:
+
+```bash
+(python /tmp/exploit2.py ; cat) | ./level2
+```
+Then, because you're in vim (yeah, that's creative), run `:sh` to get an interactive shell
+
 `492deb0e7d14c4b5695173cca843c4384fe52d0857c2b0718e1a521a4d33ec02`
